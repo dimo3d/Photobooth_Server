@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  flask-server:
+    build: ./flask-server
+    ports:
+      - "5000:5000"
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    volumes:
+      - ./uploads:/app/uploads
+      - ./processed:/app/processed
+    depends_on:
+      - redis
+
+  worker-node:
+    build: ./worker-node
+    volumes:
+      - ./uploads:/app/uploads
+      - ./processed:/app/processed
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
