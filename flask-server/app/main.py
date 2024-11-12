@@ -8,7 +8,7 @@ app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = '/app/uploads'
 app.config['PROCESSED_FOLDER'] = '/app/processed'
 app.config['SERVER_URL'] = 'http://flask-server:5000'
-
+app.config['BASEPATH'] = '/KIFOTOBOX'
 # Configure Celery
 app.config['CELERY_BROKER_URL'] = 'redis://redis:6379/0'
 app.config['CELERY_RESULT_BACKEND'] = 'redis://redis:6379/0'
@@ -16,7 +16,7 @@ celery = Celery(app.name, broker=app.config['CELERY_BROKER_URL'])
 celery.conf.update(app.config)
 
 # Upload route for the client to submit the image
-@app.route('/upload', methods=['PUT'])
+@app.route(f'{app.config['BASEPATH']}/upload', methods=['PUT'])
 def upload_image():
     if 'image' not in request.files:
         return jsonify({'error': 'No image file provided'}), 400
@@ -33,7 +33,7 @@ def upload_image():
 
     return jsonify({'task_id': task_id, 'image_id': image_id}), 202
 
-@app.route('/status/<task_id>', methods=['GET'])
+@app.route(f'{app.config['BASEPATH']}/status/<task_id>', methods=['GET'])
 def get_status(task_id):
     result = AsyncResult(task_id, app=celery)
     if result.state == 'PENDING':
@@ -44,7 +44,7 @@ def get_status(task_id):
         return {'status': 'Failed'}, 500
 
 # Route for the client to retrieve the processed image    
-@app.route('/processed/<image_id>', methods=['GET'])
+@app.route(f'{app.config['BASEPATH']}/processed/<image_id>', methods=['GET'])
 def get_image(image_id):
     processed_image_path = os.path.join(app.config['PROCESSED_FOLDER'], f"{image_id}.jpg")
 
@@ -55,7 +55,7 @@ def get_image(image_id):
 
 
 # Route for the worker to download the unprocessed image
-@app.route('/unprocessed/<image_id>', methods=['GET'])
+@app.route(f'{app.config['BASEPATH']}/unprocessed/<image_id>', methods=['GET'])
 def download_image(image_id):
     image_path = os.path.join(app.config['UPLOAD_FOLDER'], f"{image_id}.jpg")
     if not os.path.exists(image_path):
@@ -63,7 +63,7 @@ def download_image(image_id):
     return send_file(image_path, mimetype='image/jpeg')
 
 # Route for the worker to upload the processed image
-@app.route('/processed/<task_id>', methods=['POST'])
+@app.route(f'{app.config['BASEPATH']}/processed/<task_id>', methods=['POST'])
 def upload_processed_image(task_id):
     if 'image' not in request.files:
         return jsonify({'error': 'No image file provided'}), 400
