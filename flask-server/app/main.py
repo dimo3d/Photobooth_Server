@@ -1,8 +1,9 @@
-from flask import Flask, request, jsonify, send_file
+from flask import Flask, request, jsonify, send_file, abort
 from celery import Celery
 from celery.result import AsyncResult
 import uuid
 import os
+import re
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = '/app/uploads'
@@ -15,6 +16,13 @@ app.config['CELERY_RESULT_BACKEND'] = 'redis://redis:6379/0'
 celery = Celery(app.name, broker=app.config['CELERY_BROKER_URL'])
 celery.conf.update(app.config)
 
+# Define a regular expression for a valid task_id (alphanumeric and dashes only)
+TASK_ID_REGEX = re.compile(r'^[a-zA-Z0-9\-]{10,50}$')
+
+def validate_task_id(task_id):
+    if not TASK_ID_REGEX.match(task_id):
+        abort(400, description="Invalid task_id format.")
+
 basepath = app.config['BASEPATH']
 # Upload route for the client to submit the image
 @app.route(f'{basepath}/upload', methods=['PUT'])
@@ -24,7 +32,7 @@ def upload_image():
 
     image = request.files['image']
     image_id = str(uuid.uuid4())
-    server_url = f"{app.config['SERVER_URL']}"
+    server_url = f"{app.config['SERVER_URL']}{basepath}"
     task = celery.send_task('tasks.process_image_task', args=[image_id, server_url])
     task_id = task.id
 
@@ -36,6 +44,9 @@ def upload_image():
 
 @app.route(f'{basepath}/status/<task_id>', methods=['GET'])
 def get_status(task_id):
+    # Validate the task_id parameter
+    validate_task_id(task_id)
+
     result = AsyncResult(task_id, app=celery)
     if result.state == 'PENDING':
         return {'status': 'Processing'}, 202
@@ -47,6 +58,9 @@ def get_status(task_id):
 # Route for the client to retrieve the processed image    
 @app.route(f'{basepath}/processed/<image_id>', methods=['GET'])
 def get_image(image_id):
+    # Validate the task_id parameter
+    validate_task_id(image_id)
+    
     processed_image_path = os.path.join(app.config['PROCESSED_FOLDER'], f"{image_id}.jpg")
 
     if not os.path.exists(processed_image_path):
@@ -58,21 +72,27 @@ def get_image(image_id):
 # Route for the worker to download the unprocessed image
 @app.route(f'{basepath}/unprocessed/<image_id>', methods=['GET'])
 def download_image(image_id):
+    # Validate the task_id parameter
+    validate_task_id(image_id)
+
     image_path = os.path.join(app.config['UPLOAD_FOLDER'], f"{image_id}.jpg")
     if not os.path.exists(image_path):
         return jsonify({'error': 'Image not found'}), 404
     return send_file(image_path, mimetype='image/jpeg')
 
 # Route for the worker to upload the processed image
-@app.route(f'{basepath}/processed/<task_id>', methods=['POST'])
-def upload_processed_image(task_id):
+@app.route(f'{basepath}/processed/<image_id>', methods=['POST'])
+def upload_processed_image(image_id):
+    # Validate the task_id parameter
+    validate_task_id(image_id)
+
     if 'image' not in request.files:
         return jsonify({'error': 'No image file provided'}), 400
     image = request.files['image']
-    processed_image_path = os.path.join(app.config['PROCESSED_FOLDER'], f"{task_id}.jpg")
+    processed_image_path = os.path.join(app.config['PROCESSED_FOLDER'], f"{image_id}.jpg")
     image.save(processed_image_path)
 
-    return jsonify({'status': 'success', 'task_id': task_id})
+    return jsonify({'status': 'success', 'image_id': image_id})
 
     
     
