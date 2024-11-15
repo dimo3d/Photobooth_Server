@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, send_file, abort, make_response
+from flask import Flask, request, jsonify, send_file, abort, make_response, render_template
 from flask_cors import CORS
 from celery import Celery
 from celery.result import AsyncResult
@@ -6,7 +6,7 @@ import uuid
 import os
 import re
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder="static", template_folder="templates")
 CORS(app)  # Enable CORS for all routes
 app.config['UPLOAD_FOLDER'] = '/app/uploads'
 app.config['PROCESSED_FOLDER'] = '/app/processed'
@@ -32,6 +32,12 @@ def validate_task_id(task_id):
         abort(400, description="Invalid task_id format.")
 
 basepath = app.config['BASEPATH']
+
+# Route to serve the main webpage
+@app.route(f'{basepath}/')
+def index():
+    return render_template('index.html')
+
 # Upload route for the client to submit the image
 @app.route(f'{basepath}/upload', methods=['PUT'])
 def upload_image():
