@@ -20,7 +20,8 @@ celery.conf.update(app.config)
 
 # Define a regular expression for a valid task_id (alphanumeric and dashes only)
 TASK_ID_REGEX = re.compile(r'^[a-zA-Z0-9\-]{10,50}$')
-
+PROMPT="A sepia-toned vintage photograph of a young student sitting casually on an ornate chair. He is wearing a formal suit with a graduation cap and has a relaxed, confident posture. The man is exuding a scholarly and nonchalant vibe. The setting is a simple studio with a plain backdrop and a curtain on one side, adding to the old-fashioned, antique aesthetic.",
+    
 def validate_task_id(task_id):
     if not TASK_ID_REGEX.match(task_id):
         abort(400, description="Invalid task_id format.")
@@ -41,7 +42,7 @@ def upload_image():
     image.save(image_path)
 
     try:
-        task = celery.send_task('tasks.process_image_task', args=[image_id, server_url])
+        task = celery.send_task('tasks.process_image_task', args=[image_id, server_url, PROMPT])
     except Exception as e:
         os.remove(image_path)  # Cleanup the saved image if task submission fails
         return jsonify({'error': 'Failed to submit task'}), 500, {'Content-Type': 'application/json'}
