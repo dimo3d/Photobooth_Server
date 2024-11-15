@@ -29,7 +29,18 @@ body {
 
 #result-img {
     width: 100%;
-    max-width: 400px;
+    max-width: 512px;
     border: 2px solid #4caf50;
+    border-radius: 10px;
+}
+#qr-container {
+    margin-top: 20px;
+    text-align: center;
+}
+
+#qrcode {
+    margin: auto;
+    padding: 10px;
+    border: 2px solid #ccc;
     border-radius: 10px;
 }

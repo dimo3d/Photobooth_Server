@@ -48,6 +48,19 @@ async function uploadImage(imageData) {
         alert('Failed to upload image.');
     }
 }
+// Function to generate a QR code
+function generateQRCode(url) {
+    const qrCodeContainer = document.getElementById('qrcode');
+    qrCodeContainer.innerHTML = ''; // Clear any previous QR code
+    new QRCode(qrCodeContainer, {
+        text: url,
+        width: 200,
+        height: 200,
+        colorDark: "#000000",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.H
+    });
+}
 
 // Poll the server for the processed image
 async function checkForProcessedImage() {
@@ -56,9 +69,12 @@ async function checkForProcessedImage() {
     try {
         const response = await axios.get(`${SERVER_URL}/processed/${imageId}`);
         if (response.status === 200) {
-            resultImg.src = `${SERVER_URL}/processed/${imageId}`;
+            const imageUrl = `${SERVER_URL}/processed/${imageId}`;
+            resultImg.src = imageUrl;
             resultImg.style.display = 'block';
             statusMsg.textContent = 'Here is your processed image!';
+            generateQRCode(imageUrl);
+            document.getElementById('qr-container').style.display = 'block';
         } else {
             setTimeout(checkForProcessedImage, 2000); // Retry every 2 seconds
         }
