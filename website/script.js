@@ -3,6 +3,7 @@ const canvas = document.getElementById('canvas');
 const captureBtn = document.getElementById('capture-btn');
 const resultImg = document.getElementById('result-img');
 const statusMsg = document.getElementById('status-msg');
+const promptSelect = document.getElementById('prompt-select');
 
 const SERVER_URL = 'http://localhost:5000/kifotobox';
 let imageId = null;
@@ -27,19 +28,20 @@ function captureImage() {
     return canvas.toDataURL('image/jpeg');
 }
 
-// Upload the captured image to the server
+// Upload the captured image to the server with the selected prompt
 async function uploadImage(imageData) {
     try {
         const blob = dataURItoBlob(imageData);
         const formData = new FormData();
         formData.append('image', blob, 'photo.jpg');
+        formData.append('prompt_id', promptSelect.value);
 
         const response = await axios.put(`${SERVER_URL}/upload`, formData, {
             headers: { 'Content-Type': 'multipart/form-data' }
         });
 
         imageId = response.data.image_id;
-        statusMsg.textContent = 'Image uploaded. Waiting for processing...';
+        statusMsg.textContent = `Image uploaded. Chosen prompt: ${response.data.prompt}. Waiting for processing...`;
         checkForProcessedImage();
     } catch (error) {
         console.error('Error uploading image:', error);
