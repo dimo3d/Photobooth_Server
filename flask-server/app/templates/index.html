@@ -19,6 +19,14 @@
         </select>
         <button id="capture-btn">Capture Photo</button>
     </div>
+    <!-- Einwilligung Dialog -->
+    <div id="einwilligung-dialog" class="modal">
+        <div class="modal-content">
+            <p>Ich stimme der Verarbeitung meines Bildes zum oben genannten Zweck zu. Das Bild wird nach 24 Stunden automatisch gelöscht und ist nur über den generierten QR-Code zugänglich.</p>
+            <button id="einwilligung-akzeptieren">Zustimmen</button>
+            <button id="einwilligung-ablehnen">Ablehnen</button>
+        </div>
+    </div>
     <div id="result-container">
         <img id="result-img" src="" alt="Processed Image" style="display: none;">
         <p id="status-msg">Processing...</p>
