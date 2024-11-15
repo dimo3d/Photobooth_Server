@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify, send_file, abort, make_response
+from flask_cors import CORS
 from celery import Celery
 from celery.result import AsyncResult
 import uuid
@@ -6,6 +7,7 @@ import os
 import re
 
 app = Flask(__name__)
+CORS(app)  # Enable CORS for all routes
 app.config['UPLOAD_FOLDER'] = '/app/uploads'
 app.config['PROCESSED_FOLDER'] = '/app/processed'
 app.config['SERVER_URL'] = 'http://itlx8314:5000'
