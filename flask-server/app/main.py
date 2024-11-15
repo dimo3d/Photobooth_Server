@@ -22,7 +22,10 @@ celery.conf.update(app.config)
 
 # Define a regular expression for a valid task_id (alphanumeric and dashes only)
 TASK_ID_REGEX = re.compile(r'^[a-zA-Z0-9\-]{10,50}$')
-PROMPT="A sepia-toned vintage photograph of a young student sitting casually on an ornate chair. He is wearing a formal suit with a graduation cap and has a relaxed, confident posture. The man is exuding a scholarly and nonchalant vibe. The setting is a simple studio with a plain backdrop and a curtain on one side, adding to the old-fashioned, antique aesthetic.",
+PROMPTS=["A sepia-toned vintage photograph of a young student sitting casually on an ornate chair. He is wearing a formal suit with a graduation cap and has a relaxed, confident posture. The man is exuding a scholarly and nonchalant vibe. The setting is a simple studio with a plain backdrop and a curtain on one side, adding to the old-fashioned, antique aesthetic.",
+         "An astronaut in space",
+         "A formula one driver in front of is Formula one car. The setting is the racetrack.",
+         "A scubadiver under water. The setting is a colorful coral reef with many fishes"]
     
 def validate_task_id(task_id):
     if not TASK_ID_REGEX.match(task_id):
@@ -32,19 +35,23 @@ basepath = app.config['BASEPATH']
 # Upload route for the client to submit the image
 @app.route(f'{basepath}/upload', methods=['PUT'])
 def upload_image():
-    if 'image' not in request.files:
-        return jsonify({'error': 'No image file provided'}), 400, {'Content-Type': 'application/json'}
+    if 'image' not in request.files  or 'prompt_id' not in request.form:
+        return jsonify({'error': 'No image file or prompt id provided'}), 400, {'Content-Type': 'application/json'}
 
     image = request.files['image']
+    prompt_id = int(request.form['prompt_id'])
     image_id = str(uuid.uuid4())
     server_url = f"{app.config['SERVER_URL']}{basepath}"
 
+    if prompt_id < 0 or prompt_id >= len(PROMPTS):
+        return jsonify({'error': 'Invalid prompt_id'}), 400
+    
     # Save the image using the task ID
     image_path = os.path.join(app.config['UPLOAD_FOLDER'], f"{image_id}.jpg")
     image.save(image_path)
 
     try:
-        task = celery.send_task('tasks.process_image_task', args=[image_id, server_url, PROMPT])
+        task = celery.send_task('tasks.process_image_task', args=[image_id, server_url, PROMPTS[prompt_id], prompt_id])
     except Exception as e:
         os.remove(image_path)  # Cleanup the saved image if task submission fails
         return jsonify({'error': 'Failed to submit task'}), 500, {'Content-Type': 'application/json'}
