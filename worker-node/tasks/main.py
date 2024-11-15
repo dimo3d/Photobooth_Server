@@ -10,7 +10,7 @@ UPLOAD_FOLDER = '/app/uploads'
 PROCESSED_FOLDER = '/app/processed'
 
 @celery.task(name="tasks.process_image_task")
-def process_image_task(image_id, server_url):
+def process_image_task(image_id, server_url, prompt, claimnumber):
     """
     Processes the image using the task ID as the identifier.
     """
