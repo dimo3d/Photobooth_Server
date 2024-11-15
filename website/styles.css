@@ -1,0 +1,35 @@
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    background-color: #f0f0f0;
+}
+
+#camera-container {
+    position: relative;
+    display: inline-block;
+}
+
+#video {
+    width: 100%;
+    max-width: 400px;
+    border: 2px solid #ccc;
+    border-radius: 10px;
+}
+
+#capture-btn {
+    margin-top: 10px;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+#result-container {
+    margin-top: 20px;
+}
+
+#result-img {
+    width: 100%;
+    max-width: 400px;
+    border: 2px solid #4caf50;
+    border-radius: 10px;
+}
