@@ -38,6 +38,11 @@ basepath = app.config['BASEPATH']
 def index():
     return render_template('index.html')
 
+# Route to serve the Datenschutzerklärung page
+@app.route(f'{basepath}/datenschutz')
+def datenschutz():
+    return render_template('datenschutz.html')
+
 # Upload route for the client to submit the image
 @app.route(f'{basepath}/upload', methods=['PUT'])
 def upload_image():
