@@ -8,7 +8,7 @@ import re
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = '/app/uploads'
 app.config['PROCESSED_FOLDER'] = '/app/processed'
-app.config['SERVER_URL'] = 'http://flask-server:5000'
+app.config['SERVER_URL'] = 'http://itlx8314:5000'
 app.config['BASEPATH'] = '/kifotobox'
 # Configure Celery
 app.config['CELERY_BROKER_URL'] = 'redis://redis:6379/0'
